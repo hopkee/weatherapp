@@ -21,9 +21,14 @@ class TabBarController: UITabBarController {
         let todayWeatherPresenter = TodayWeatherPresenter(view: todayWeatherView)
         todayWeatherView.presenter = todayWeatherPresenter
         
+        // Initializing view and setup presenter for forecast weather screen
+        let forecastView = ForecastView()
+        let forecastPresenter = ForecastPresenter(view: forecastView)
+        forecastView.presenter = forecastPresenter
+        
         viewControllers = [
             createNavigationController(todayWeatherView, "Today", UIImage(named: "tb-today")!),
-            createNavigationController(ForecastView(), "Forecast", UIImage(named: "tb-forecast")!)
+            createNavigationController(forecastView, "Forecast", UIImage(named: "tb-forecast")!)
         ]
     }
     
@@ -38,8 +43,14 @@ class TabBarController: UITabBarController {
     }
     
     private func setupUI() {
-        UITabBar.appearance().barTintColor = .systemBackground
-        view.backgroundColor = .systemBackground
+        let appearance = UITabBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = UIColor(red: 24 / 255, green: 25 / 255, blue: 26 / 255, alpha: 1.0)
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = UITabBar.appearance().standardAppearance
+        UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.white], for:.selected)
+        UITabBar.appearance().tintColor = .white
+        view.backgroundColor = UIColor(red: 24 / 255, green: 25 / 255, blue: 26 / 255, alpha: 1.0)
     }
 
 }
