@@ -8,9 +8,6 @@
 import Foundation
 
 struct Forecast: Decodable {
-    let cod: String
-    let message: Int
-    let cnt: Int
     let list: [CurrentWeather]
     let city: City
 }

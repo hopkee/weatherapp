@@ -44,8 +44,8 @@ class TabBarController: UITabBarController {
     
     private func setupUI() {
         let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor(red: 24 / 255, green: 25 / 255, blue: 26 / 255, alpha: 1.0)
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(red: 24 / 255, green: 25 / 255, blue: 26 / 255, alpha: 1.0)
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = UITabBar.appearance().standardAppearance
         UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.white], for:.selected)

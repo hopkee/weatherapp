@@ -9,7 +9,8 @@ import UIKit
 
 protocol CurrentWeatherView: AnyObject {
     func updateViewWithCurrentWeather(_ weather: CurrentWeather)
-    func updateNetworkStatus(_ message: String)
+    func updateViewWithError(_ message: String)
+    func updateViewWithCurrentLocation(_ location: CurrentLocation)
     func presentViewController(_ controller: UIViewController)
 }
 
@@ -128,8 +129,8 @@ final class TodayWeatherView: UIViewController {
     }()
     
     lazy var cityImageView: UIImageView = {
-        guard let image = UIImage(named: "minsk") else { return UIImageView() }
-        let imageView = UIImageView(image: image)
+        let imageView = UIImageView()
+        imageView.backgroundColor = .systemMint
         return imageView
     }()
     
@@ -186,7 +187,7 @@ final class TodayWeatherView: UIViewController {
     override var preferredStatusBarStyle: UIStatusBarStyle {
         .lightContent
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         setNeedsStatusBarAppearanceUpdate()
@@ -194,10 +195,10 @@ final class TodayWeatherView: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        presenter.viewDidLoad()
         setupViews()
         setupConstraints()
         setupUI()
-        presenter.viewDidLoad()
     }
     
     private func setupConstraints() {
@@ -256,8 +257,7 @@ final class TodayWeatherView: UIViewController {
     }
     
     @objc func shareWeather() {
-        print("Share weather")
-        presenter.shareCurrenrtWeather()
+        presenter.shareCurrentWeather()
     }
     
     private func setupViews() {
@@ -331,12 +331,11 @@ final class TodayWeatherView: UIViewController {
 extension TodayWeatherView: CurrentWeatherView {
     
     func updateViewWithCurrentWeather(_ weather: CurrentWeather) {
-        dateLabel.text = presenter.getCurrentDate()
-        locationLabel.text = weather.name
+        dateLabel.text = presenter.getCurrentDate(timeStyle: .none, dateStyle: .medium)
         tempLabel.text = weather.main.temp.rounded().removeZero + "°C"
         weatherStateImage.image = UIImage(named: weather.weather[0].icon)?.withTintColor(.white)
         weatherStateDescription.text = weather.weather[0].main
-        networkStatusButton.setTitle("Last update: " + presenter.getLastUpdateTime(weather), for: .normal)
+        networkStatusButton.setTitle("Last update: " + presenter.getCurrentDate(timeStyle: .short, dateStyle: .medium), for: .normal)
         feelLikeValue.text = weather.main.feels_like.rounded().removeZero + "°C"
         hummidityValue.text = String(weather.main.humidity) + "%"
         precipitationValue.text = (weather.rain?.oneHour?.description ??
@@ -350,12 +349,24 @@ extension TodayWeatherView: CurrentWeatherView {
         visibilityValue.text = String(weather.visibility) + " meters"
     }
     
-    func updateNetworkStatus(_ message: String) {
-
+    func updateViewWithCurrentLocation(_ location: CurrentLocation) {
+        if let backgroundImage = location.cityImage {
+            cityImageView.image = backgroundImage
+        }
+        locationLabel.text = location.city + ", " + location.country
+    }
+    
+    func updateViewWithError(_ message: String) {
+        let alertController = UIAlertController(title: "Connection error", message: message, preferredStyle: .alert)
+        let retryAction = UIAlertAction(title: "Retry", style: .default, handler: { [weak self] _ in
+            self!.presenter.refreshData()
+        })
+        alertController.addAction(retryAction)
+        self.present(alertController, animated: true)
     }
     
     func presentViewController(_ controller: UIViewController) {
         self.present(controller, animated: true)
     }
-    
+
 }

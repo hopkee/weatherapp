@@ -16,21 +16,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         
         if #available(iOS 15, *) {
-                        let navigationBarAppearance = UINavigationBarAppearance()
-                        navigationBarAppearance.configureWithOpaqueBackground()
-                        navigationBarAppearance.titleTextAttributes = [
-                            NSAttributedString.Key.foregroundColor : UIColor.white
-                        ]
-                        navigationBarAppearance.backgroundColor = UIColor(red: 24 / 255, green: 25 / 255, blue: 26 / 255, alpha: 1.0)
-                        UINavigationBar.appearance().standardAppearance = navigationBarAppearance
-                        UINavigationBar.appearance().compactAppearance = navigationBarAppearance
-                        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+            let navigationBarAppearance = UINavigationBarAppearance()
+            navigationBarAppearance.configureWithOpaqueBackground()
+            navigationBarAppearance.titleTextAttributes = [
+                NSAttributedString.Key.foregroundColor : UIColor.white
+            ]
+            navigationBarAppearance.backgroundColor = UIColor(red: 24 / 255, green: 25 / 255, blue: 26 / 255, alpha: 1.0)
+            UINavigationBar.appearance().standardAppearance = navigationBarAppearance
+            UINavigationBar.appearance().compactAppearance = navigationBarAppearance
+            UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
                     
-                    let tabBarApperance = UITabBarAppearance()
-                    tabBarApperance.configureWithOpaqueBackground()
-                    tabBarApperance.backgroundColor = UIColor(red: 24 / 255, green: 25 / 255, blue: 26 / 255, alpha: 1.0)
-                    UITabBar.appearance().scrollEdgeAppearance = tabBarApperance
-                    UITabBar.appearance().standardAppearance = tabBarApperance
+            let tabBarApperance = UITabBarAppearance()
+            tabBarApperance.configureWithOpaqueBackground()
+            tabBarApperance.backgroundColor = UIColor(red: 24 / 255, green: 25 / 255, blue: 26 / 255, alpha: 1.0)
+            UITabBar.appearance().scrollEdgeAppearance = tabBarApperance
+            UITabBar.appearance().standardAppearance = tabBarApperance
         }
         
         return true

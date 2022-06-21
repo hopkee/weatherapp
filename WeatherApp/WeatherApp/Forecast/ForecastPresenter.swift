@@ -6,38 +6,56 @@
 //
 
 import Foundation
+import UIKit
+import CoreLocation
 
 protocol ForecastViewPresenter: AnyObject {
     init(view: ForecastViewer)
-    func viewDidLoad()
-    func shareForecast()
+    func shareForecast(_ currentWeather: CurrentWeather)
     func getTitleForSection(section: Int) -> String
     func getNumberOfSections() -> Int
     func getNumberOfRowsInSection(_ section: Int) -> Int
     func getArrayOfCurrentWeathers() -> [[CurrentWeather]]
+    func refreshData()
 }
 
 final class ForecastPresenter: NSObject, ForecastViewPresenter {
     
     weak var view: ForecastViewer?
-    var currentLocation: Coord = Coord(lon: 27.44718004261057, lat: 53.88340368211527)
+    private let locationManager = CLLocationManager()
+    private var currentLocation: CurrentLocation?
     var forecast: Forecast?
-    var arrayOfElements: [[CurrentWeather]] = []
+    var forecastArray: [[CurrentWeather]] = []
     
     required init(view: ForecastViewer) {
         self.view = view
+        super.init()
+        locationManager.delegate = self
+        locationManager.requestAlwaysAuthorization()
+        locationManager.startUpdatingLocation()
     }
     
-    func viewDidLoad() {
+    func refreshData() {
+        locationManager.startUpdatingLocation()
         fetchData()
     }
     
-    func shareForecast() {
-        //TODO: Share function
+    func shareForecast(_ currentWeather: CurrentWeather) {
+        let data = "The weather on " + currentWeather.dt_txt! + ":\n" + currentWeather.main.temp.rounded().removeZero + "°C, " + currentWeather.weather.first!.description
+        let firstActivityItem = data
+        let activityViewController = UIActivityViewController(activityItems: [firstActivityItem], applicationActivities: nil)
+        activityViewController.activityItemsConfiguration = [UIActivity.ActivityType.message] as? UIActivityItemsConfigurationReading
+        activityViewController.excludedActivityTypes = [
+            UIActivity.ActivityType.assignToContact,
+            UIActivity.ActivityType.saveToCameraRoll,
+            UIActivity.ActivityType.addToReadingList,
+        ]
+        activityViewController.isModalInPresentation = true
+        view!.presentViewController(activityViewController)
     }
     
     func getTitleForSection(section: Int) -> String {
-        let dt = arrayOfElements[section][0].dt
+        let dt = forecastArray[section][0].dt
         let date = Date(timeIntervalSince1970: Double(dt))
         let dateFormatter = DateFormatter()
         dateFormatter.timeStyle = .none
@@ -48,15 +66,15 @@ final class ForecastPresenter: NSObject, ForecastViewPresenter {
     }
     
     func getNumberOfRowsInSection(_ section: Int) -> Int {
-        arrayOfElements[section].count
+        forecastArray[section].count
     }
     
     func getNumberOfSections() -> Int {
-        arrayOfElements.count
+        forecastArray.count
     }
     
     func getArrayOfCurrentWeathers() -> [[CurrentWeather]] {
-        arrayOfElements
+        forecastArray
     }
     
     private func fillArrayOfElements() {
@@ -75,18 +93,45 @@ final class ForecastPresenter: NSObject, ForecastViewPresenter {
             }
         }
         if !subArrayOfElements.isEmpty {
-            arrayOfElements.append(subArrayOfElements)
+            forecastArray.append(subArrayOfElements)
         }
         daysCounter += 1
-        } while (daysCounter < 7)
+        } while daysCounter < 7
     }
     
     private func fetchData() {
-        OpenWeatherMapAPI.shared.getForecast(location: currentLocation, handler: { [weak self] forecast in
-            self!.forecast = forecast
-            self!.fillArrayOfElements()
-            self!.view?.updateViewWithForecast(forecast)
-        })
+        if let currentLocation = currentLocation {
+            OpenWeatherMapAPI.shared.getForecast(location: currentLocation, handler: { [weak self] forecast, error in
+                if let forecast = forecast {
+                    self!.forecast = forecast
+                    self!.fillArrayOfElements()
+                    self!.view?.updateViewWithForecast(forecast)
+                } else if let error = error {
+                    if OpenWeatherMapAPI.shared.checkConnection() {
+                        self!.view?.updateViewWithError(error.localizedDescription)
+                    } else {
+                        self!.view?.updateViewWithError(ConnectionErrors.noInternetConnection.rawValue)
+                    }
+                }
+            })
+        }
+        locationManager.stopUpdatingLocation()
     }
     
+}
+
+extension ForecastPresenter: CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let locValue: CLLocationCoordinate2D = manager.location?.coordinate else { return }
+        CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: locValue.latitude, longitude: locValue.longitude), preferredLocale: Locale(identifier: "en_US"), completionHandler: { [weak self] placemarks, _ in
+            guard let country = placemarks?.first?.country,
+                  let city = placemarks?.first?.locality else { return }
+            let location = CurrentLocation(lon: locValue.longitude, lat: locValue.latitude, city: city, country: country, cityImage: UIImage(named: city))
+            self!.currentLocation = location
+            self!.view?.updateCurrentLocation(location)
+            self!.fetchData()
+        })
+    }
+
 }
